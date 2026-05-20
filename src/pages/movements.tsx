@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { fetchMovements } from "../api/server";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
+import type { Vault } from "../types/vault";
 
 interface Movements {
   id: number;
@@ -12,11 +13,6 @@ interface Movements {
   user_name: string;
 }
 
-interface Vault {
-  name: string;
-  store: string;
-  balance: number;
-}
 const formatDate = (isoString: string): string => {
   return new Date(isoString).toLocaleDateString("es-CO", {
     day: "numeric",
@@ -43,12 +39,20 @@ function MovementsPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const vault = location.state?.vault as Vault | undefined;
 
   const handleAddMov = () => {
     navigate("/añadir-movimiento");
   };
 
   useEffect(() => {
+    // Si alguien entra directo a la URL sin autenticarse, mándalo atrás
+    if (!vault) {
+      navigate(-1);
+      return;
+    }
     fetchMoveData();
   }, []);
 
@@ -64,20 +68,16 @@ function MovementsPage() {
     }
   };
 
+  if (!vault) return null; // redirigiendo
+
   if (isLoading) {
     return <div> Loading page...</div>;
   }
 
-  const vault: Vault = {
-    name: "Bóveda Principal",
-    store: "Local Centro",
-    balance: 4850000,
-  };
-
   return (
     <div>
       <div className="font-bold text-2xl sm:text-right text-center p-10">
-        <h2 className="">{vault.store}</h2>
+        <h2 className="">Local: {vault.store_name}</h2>
         <h1>{vault.name}</h1>
         <p>Saldo: {formatCurrency(vault.balance)}</p>
       </div>

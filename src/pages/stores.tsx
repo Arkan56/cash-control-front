@@ -1,10 +1,10 @@
 import Grid from "../components/grid";
 import { useNavigate } from "react-router";
 
-type Stores = {
+interface Stores {
   id: number;
   name: string;
-};
+}
 
 function StoresPage() {
   const navigate = useNavigate();

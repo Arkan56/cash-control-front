@@ -24,3 +24,27 @@ export const createMovement = async (payload: {
   if (!response.ok) throw new Error("Error al crear movimiento");
   return response.json();
 };
+
+export const FetchVaults = async () => {
+  const response = await fetch(`${BASE_URL}/vaults/1`);
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch vaults");
+  }
+  return response.json();
+};
+
+export const loginVault = async (vault_id: number, password: string) => {
+  const response = await fetch(`${BASE_URL}/auth/login/vault`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ vault_id, password }),
+  });
+
+  if (!response.ok) {
+    const errData = await response.json().catch(() => ({}));
+    throw new Error(errData?.message ?? "Contraseña incorrecta");
+  }
+
+  return response.json();
+};

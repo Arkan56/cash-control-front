@@ -1,15 +1,15 @@
 import Card from "./card";
 
-type Item = {
+interface Item {
   id: number;
   title: string;
   subtitle?: string;
-};
+}
 
-type GridProps = {
+interface GridProps {
   items: Item[];
   onItemClick?: (id: number) => void;
-};
+}
 
 export default function Grid({ items, onItemClick }: GridProps) {
   return (
