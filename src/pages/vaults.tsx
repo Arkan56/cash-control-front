@@ -11,7 +11,7 @@ function VaultsPage() {
   const [vaultsList, setVaultList] = useState<Vault[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const [selectedVaultId, setSelectedVaultId] = useState<number | null>(null);
+  const [selectedVault, setSelectedVault] = useState<Vault | null>(null);
   const [password, setPassword] = useState("");
   const [authError, setAuthError] = useState("");
   const [isAuthLoading, setIsAuthLoading] = useState(false);
@@ -23,7 +23,7 @@ function VaultsPage() {
 
   const fetchVaultData = async () => {
     try {
-      const data = await FetchVaults();
+      const data = await FetchVaults(Number(storeId));
       console.log(data);
       setVaultList(data);
     } catch (err) {
@@ -35,26 +35,27 @@ function VaultsPage() {
 
   // Abre el modal en vez de navegar directamente
   const handleVaultClick = (id: number) => {
-    setSelectedVaultId(id);
+    const vault = vaultsList.find((v) => v.id === id) ?? null;
+    setSelectedVault(vault);
     setPassword("");
     setAuthError("");
     setTimeout(() => passwordRef.current?.focus(), 50);
   };
 
   const handleCloseModal = () => {
-    setSelectedVaultId(null);
+    setSelectedVault(null);
     setPassword("");
     setAuthError("");
   };
 
   const handleAuth = async () => {
-    if (!selectedVaultId) return;
+    if (!selectedVault) return;
     setIsAuthLoading(true);
     setAuthError("");
 
     try {
-      const vaultData = await loginVault(selectedVaultId, password);
-      navigate(`/movimientos/${selectedVaultId}`, {
+      const vaultData = await loginVault(selectedVault.id, password);
+      navigate(`/movimientos/${selectedVault.id}`, {
         state: { vault: vaultData },
       });
     } catch (err) {
@@ -75,7 +76,7 @@ function VaultsPage() {
       <Grid items={formattedVaults} onItemClick={handleVaultClick} />
 
       {/* Modal */}
-      {selectedVaultId !== null && (
+      {selectedVault !== null && (
         <div
           className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
           onClick={(e) => {
@@ -85,7 +86,7 @@ function VaultsPage() {
           <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm mx-4">
             <h2 className="text-lg font-semibold mb-1">Acceso a cajilla</h2>
             <p className="text-sm text-gray-500 mb-4">
-              Ingresa la contraseña para la cajilla #{selectedVaultId}
+              Ingresa la contraseña para {selectedVault.name}
             </p>
 
             <input

@@ -1,20 +1,28 @@
+import { useEffect, useState } from "react";
 import Grid from "../components/grid";
 import { useNavigate } from "react-router";
-
-interface Stores {
-  id: number;
-  name: string;
-}
+import { fetchStores } from "../api/server";
+import type { Stores } from "../types/stores";
 
 function StoresPage() {
-  const navigate = useNavigate();
-  const stores: Stores[] = [
-    { id: 1, name: "Prado 1" },
-    { id: 2, name: "Prado 2" },
-    { id: 3, name: "San Cristobal" },
-  ];
+  const [storeList, setStoreList] = useState<Stores[]>([]);
 
-  const formattedStores = stores.map((s) => ({
+  useEffect(() => {
+    fetchStoreData();
+  }, []);
+
+  const fetchStoreData = async () => {
+    try {
+      const data = await fetchStores();
+      setStoreList(data);
+    } catch (err) {
+      console.error("Error fetching stores: ", err);
+    }
+  };
+
+  const navigate = useNavigate();
+
+  const formattedStores = storeList.map((s) => ({
     id: s.id,
     title: s.name,
   }));

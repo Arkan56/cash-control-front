@@ -59,7 +59,6 @@ function MovementsPage() {
   const fetchMoveData = async () => {
     try {
       const data = await fetchMovements();
-      console.log(data);
       setMoveList(data);
     } catch (err) {
       console.error("Error fetching movements: ", err);
