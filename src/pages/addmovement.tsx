@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { createMovement } from "../api/server"; // función que crearás
 
 function AddMovementPage() {
@@ -12,7 +12,7 @@ function AddMovementPage() {
   const [amountRaw, setAmountRaw] = useState<number | null>(null);
   const [categoryId, setCategoryId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const { vaultId } = useParams();
   const formatThousands = (val: string) =>
     val
       .replace(/\./g, "")
@@ -50,14 +50,14 @@ function AddMovementPage() {
       detail,
       amount: finalAmount,
       amount_category_id: parseInt(categoryId),
-      vault_id: 1,
+      vault_id: Number(vaultId),
       user_id: 1,
     };
 
     try {
       setIsSubmitting(true);
       await createMovement(payload); // POST al back
-      navigate("/movimientos"); // vuelve a la lista → el useEffect la refresca
+      navigate(`/movimientos/${vaultId}`); // vuelve a la lista → el useEffect la refresca
     } catch (err) {
       console.error("Error al guardar:", err);
     } finally {

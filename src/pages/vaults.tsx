@@ -2,7 +2,7 @@ import { useNavigate, useParams } from "react-router";
 import Grid from "../components/grid";
 import type { Vault } from "../types/vault";
 import { useEffect, useRef, useState } from "react";
-import { FetchVaults, loginVault } from "../api/server";
+import { fetchVaults, loginVault } from "../api/server";
 
 function VaultsPage() {
   const { storeId } = useParams();
@@ -23,7 +23,7 @@ function VaultsPage() {
 
   const fetchVaultData = async () => {
     try {
-      const data = await FetchVaults(Number(storeId));
+      const data = await fetchVaults(Number(storeId));
       console.log(data);
       setVaultList(data);
     } catch (err) {

@@ -1,11 +1,26 @@
-const BASE_URL = "http://localhost:3000";
+import { apiFetch, setToken } from "./cliente";
 
-export const fetchMovements = async () => {
-  const response = await fetch(`${BASE_URL}/movements/vault/1`);
-  if (!response.ok) {
-    throw new Error("Failed to fetch movements");
-  }
-  return response.json();
+// --- Auth ---
+export const loginUser = async (userName: string, password: string) => {
+  const data = await apiFetch("/auth/login/user", {
+    method: "POST",
+    skipAuth: true,
+    body: JSON.stringify({ user_name: userName, password }),
+  });
+  setToken(data.token); // ajusta el nombre del campo según lo que devuelva tu handler
+  return data;
+};
+
+export const loginVault = async (vault_id: number, password: string) => {
+  return apiFetch("/api/core/auth/login/vault", {
+    method: "POST",
+    body: JSON.stringify({ vault_id, password }),
+  });
+};
+
+// --- Core ---
+export const fetchMovements = async (vault_id: number) => {
+  return apiFetch(`/api/core/movements/vault/${vault_id}`);
 };
 
 export const createMovement = async (payload: {
@@ -15,58 +30,26 @@ export const createMovement = async (payload: {
   vault_id: number;
   user_id: number;
 }) => {
-  const response = await fetch(`${BASE_URL}/movements`, {
+  return apiFetch("/api/core/movements", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-
-  if (!response.ok) throw new Error("Error al crear movimiento");
-  return response.json();
 };
 
-export const FetchVaults = async (storeId: number) => {
-  const response = await fetch(`${BASE_URL}/vaults/${storeId}`);
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch vaults");
-  }
-  return response.json();
-};
-
-export const loginVault = async (vault_id: number, password: string) => {
-  const response = await fetch(`${BASE_URL}/auth/login/vault`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ vault_id, password }),
-  });
-
-  if (!response.ok) {
-    const errData = await response.json().catch(() => ({}));
-    throw new Error(errData?.message ?? "Contraseña incorrecta");
-  }
-
-  return response.json();
+export const fetchVaults = async (storeId: number) => {
+  return apiFetch(`/api/core/vaults/${storeId}`);
 };
 
 export const fetchStores = async () => {
-  const response = await fetch(`${BASE_URL}/stores`);
-  console.log("fetching stores");
-  if (!response.ok) {
-    throw new Error("Failed to fetch Stores");
-  }
-  return response.json();
+  return apiFetch("/api/core/stores");
 };
 
+// --- Admin ---
 export const createStore = async (payload: { name: string }) => {
-  const response = await fetch(`${BASE_URL}/stores`, {
+  return apiFetch("/api/admin/stores", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-
-  if (!response.ok) throw new Error("Error al crear local");
-  return response.json();
 };
 
 export const createVault = async (payload: {
@@ -74,12 +57,19 @@ export const createVault = async (payload: {
   name: string;
   password: string;
 }) => {
-  const response = await fetch(`${BASE_URL}/vaults`, {
+  return apiFetch("/api/admin/vaults", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
+};
 
-  if (!response.ok) throw new Error("Error al crear local");
-  return response.json();
+export const createUser = async (payload: {
+  user_name: string;
+  name: string;
+  password: string;
+}) => {
+  return apiFetch("/api/admin/users", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 };

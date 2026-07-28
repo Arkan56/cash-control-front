@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchMovements } from "../api/server";
-import { useLocation, useNavigate } from "react-router";
+import { useLocation, useNavigate, useParams } from "react-router";
 import type { Vault } from "../types/vault";
 
 interface Movements {
@@ -41,10 +41,12 @@ function MovementsPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const { vaultId } = useParams();
+
   const vault = location.state?.vault as Vault | undefined;
 
   const handleAddMov = () => {
-    navigate("/añadir-movimiento");
+    navigate(`/añadir-movimiento/${vaultId}`);
   };
 
   useEffect(() => {
@@ -58,7 +60,7 @@ function MovementsPage() {
 
   const fetchMoveData = async () => {
     try {
-      const data = await fetchMovements();
+      const data = await fetchMovements(Number(vaultId));
       setMoveList(data);
     } catch (err) {
       console.error("Error fetching movements: ", err);

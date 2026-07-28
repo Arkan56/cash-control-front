@@ -31,6 +31,10 @@ function AdminDashboardPage() {
     navigate("/admin/crear-cajilla");
   };
 
+  const handleCreateUser = () => {
+    navigate("/admin/crear-usuario");
+  };
+
   const formattedStores = storeList.map((s) => ({
     id: s.id,
     title: s.name,
@@ -51,6 +55,12 @@ function AdminDashboardPage() {
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
         >
           Crear cajilla
+        </button>
+        <button
+          onClick={handleCreateUser}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+        >
+          Crear usuario
         </button>
       </div>
       <Grid items={formattedStores} />
