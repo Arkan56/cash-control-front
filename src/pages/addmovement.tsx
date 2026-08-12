@@ -51,7 +51,6 @@ function AddMovementPage() {
       amount: finalAmount,
       amount_category_id: parseInt(categoryId),
       vault_id: Number(vaultId),
-      user_id: 1,
     };
 
     try {

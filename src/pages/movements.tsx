@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchMovements } from "../api/server";
+import { fetchMovements, fetchVault } from "../api/server";
 import { useLocation, useNavigate, useParams } from "react-router";
 import type { Vault } from "../types/vault";
 
@@ -35,44 +35,61 @@ const formatCurrency = (value: number): string => {
 };
 
 function MovementsPage() {
+  const [vault, setVault] = useState<Vault | null>(null);
   const [moveList, setMoveList] = useState<Movements[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const navigate = useNavigate();
-  const location = useLocation();
-
   const { vaultId } = useParams();
-
-  const vault = location.state?.vault as Vault | undefined;
+  const navigate = useNavigate();
 
   const handleAddMov = () => {
     navigate(`/añadir-movimiento/${vaultId}`);
   };
 
   useEffect(() => {
-    // Si alguien entra directo a la URL sin autenticarse, mándalo atrás
-    if (!vault) {
-      navigate(-1);
+    if (!vaultId) {
+      navigate("/"); // o donde corresponda
       return;
     }
-    fetchMoveData();
-  }, []);
 
-  const fetchMoveData = async () => {
+    loadData();
+  }, [vaultId]);
+
+  const loadData = async () => {
     try {
-      const data = await fetchMovements(Number(vaultId));
-      setMoveList(data);
-    } catch (err) {
-      console.error("Error fetching movements: ", err);
+      const id = Number(vaultId);
+
+      const vaultData = await fetchVault(id);
+      setVault(vaultData);
+
+      const movements = await fetchMovements(id);
+      setMoveList(movements);
+    } catch (err: any) {
+      console.error(err);
+
+      if (err.status === 403) {
+        alert("No tienes acceso a esta cajilla.");
+        navigate("/cajillas");
+        return;
+      }
+
+      if (err.status === 404) {
+        navigate("/404");
+        return;
+      }
+
+      alert("Ocurrió un error.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (!vault) return null; // redirigiendo
-
   if (isLoading) {
-    return <div> Loading page...</div>;
+    return <div>Loading...</div>;
+  }
+
+  if (!vault) {
+    return <div>No fue posible cargar la cajilla.</div>;
   }
 
   return (

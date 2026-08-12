@@ -9,6 +9,8 @@ import CreateVaultPage from "./pages/admin/createVault";
 import LoginPage from "./pages/auth/login";
 import { RequireRol } from "./components/requireRol";
 import CreateUserPage from "./pages/admin/createUser";
+import UserDetailPage from "./pages/admin/userDetail";
+import UsersPage from "./pages/admin/users";
 
 const ADMIN_ROL = 1;
 const WORKER_ROL = 2;
@@ -87,6 +89,24 @@ function App() {
           element={
             <RequireRol rolesPermitidos={[ADMIN_ROL]}>
               <CreateUserPage />
+            </RequireRol>
+          }
+        />
+
+        <Route
+          path="/admin/usuarios/:userId"
+          element={
+            <RequireRol rolesPermitidos={[ADMIN_ROL]}>
+              <UserDetailPage />
+            </RequireRol>
+          }
+        />
+
+        <Route
+          path="/admin/usuarios"
+          element={
+            <RequireRol rolesPermitidos={[ADMIN_ROL]}>
+              <UsersPage />
             </RequireRol>
           }
         />

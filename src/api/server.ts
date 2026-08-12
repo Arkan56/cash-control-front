@@ -7,15 +7,12 @@ export const loginUser = async (userName: string, password: string) => {
     skipAuth: true,
     body: JSON.stringify({ user_name: userName, password }),
   });
-  setToken(data.token); // ajusta el nombre del campo según lo que devuelva tu handler
+  setToken(data.token);
   return data;
 };
 
-export const loginVault = async (vault_id: number, password: string) => {
-  return apiFetch("/api/core/auth/login/vault", {
-    method: "POST",
-    body: JSON.stringify({ vault_id, password }),
-  });
+export const fetchVault = async (vault_id: number) => {
+  return apiFetch(`/api/core/vaults/${vault_id}`);
 };
 
 // --- Core ---
@@ -28,16 +25,15 @@ export const createMovement = async (payload: {
   amount: number;
   amount_category_id: number;
   vault_id: number;
-  user_id: number;
 }) => {
-  return apiFetch("/api/core/movements", {
+  return apiFetch(`/api/core/movements/${payload.vault_id}`, {
     method: "POST",
     body: JSON.stringify(payload),
   });
 };
 
-export const fetchVaults = async (storeId: number) => {
-  return apiFetch(`/api/core/vaults/${storeId}`);
+export const fetchVaults = async (store_id: number) => {
+  return apiFetch(`/api/core/store/vaults/${store_id}`);
 };
 
 export const fetchStores = async () => {
@@ -55,7 +51,6 @@ export const createStore = async (payload: { name: string }) => {
 export const createVault = async (payload: {
   store_id: number;
   name: string;
-  password: string;
 }) => {
   return apiFetch("/api/admin/vaults", {
     method: "POST",
@@ -73,3 +68,33 @@ export const createUser = async (payload: {
     body: JSON.stringify(payload),
   });
 };
+
+export const fetchAdminStores = async () => {
+  return apiFetch("/api/admin/stores");
+};
+
+export const fetchUsers = async () => {
+  return apiFetch("/api/admin/users");
+};
+
+export const fetchUser = async (userId: number) =>
+  apiFetch(`/api/admin/users/${userId}`);
+
+export const fetchStoreAccess = async (userId: number) =>
+  apiFetch(`/api/admin/storesacces/${userId}`);
+
+export const fetchVaultAccess = async (userId: number) =>
+  apiFetch(`/api/admin/vaultsacces/${userId}`);
+
+export const fetchAdminVaults = async () =>
+  apiFetch("/api/admin/vaults");
+
+export async function syncUserAccess(
+  userId: number,
+  data: { store_ids: number[]; vault_ids: number[] }
+) {
+  return apiFetch(`/api/admin/users/${userId}/access`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+}

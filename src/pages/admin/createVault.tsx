@@ -12,7 +12,6 @@ export default function CreateVaultPage() {
 
   const [storeId, setStoreId] = useState("");
   const [name, setName] = useState("");
-  const [password, setPassword] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -36,7 +35,7 @@ export default function CreateVaultPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!storeId || !name || !password) {
+    if (!storeId || !name) {
       setMessage("Todos los campos son obligatorios");
       return;
     }
@@ -48,14 +47,12 @@ export default function CreateVaultPage() {
       await createVault({
         store_id: Number(storeId),
         name,
-        password,
       });
 
       setMessage("Cajilla creada correctamente");
 
       setStoreId("");
       setName("");
-      setPassword("");
       navigate(`/cajillas/${storeId}`);
     } catch (error) {
       console.error(error);
@@ -96,18 +93,6 @@ export default function CreateVaultPage() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Ej: Cajilla 1"
-            className="border border-gray-300 rounded-lg px-3 py-2"
-          />
-        </div>
-
-        <div className="flex flex-col">
-          <label className="mb-1 font-medium">Contraseña</label>
-
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="********"
             className="border border-gray-300 rounded-lg px-3 py-2"
           />
         </div>
