@@ -11,7 +11,6 @@ function AddMovementPage() {
   const [amountDisplay, setAmountDisplay] = useState("");
   const [amountRaw, setAmountRaw] = useState<number | null>(null);
   const [categoryId, setCategoryId] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const { vaultId } = useParams();
   const formatThousands = (val: string) =>
     val
@@ -32,16 +31,6 @@ function AddMovementPage() {
         : amountRaw
       : null;
 
-  const amountPreview =
-    finalAmount !== null
-      ? (finalAmount > 0 ? "+" : "") +
-        finalAmount.toLocaleString("es-CO", {
-          style: "currency",
-          currency: "COP",
-          maximumFractionDigits: 0,
-        })
-      : null;
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!detail || finalAmount === null || !categoryId) return;
@@ -54,13 +43,10 @@ function AddMovementPage() {
     };
 
     try {
-      setIsSubmitting(true);
       await createMovement(payload); // POST al back
       navigate(`/movimientos/${vaultId}`); // vuelve a la lista → el useEffect la refresca
     } catch (err) {
       console.error("Error al guardar:", err);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 

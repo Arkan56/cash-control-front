@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchMovements, fetchVault } from "../api/server";
-import { useLocation, useNavigate, useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import type { Vault } from "../types/vault";
 
 interface Movements {

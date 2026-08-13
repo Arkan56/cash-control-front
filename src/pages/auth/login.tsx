@@ -9,7 +9,6 @@ const WORKER_ROL = 2;
 function LoginPage() {
   const [userName, setUserName] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -29,7 +28,6 @@ function LoginPage() {
       }
     } catch (err) {
       console.error("Error al iniciar sesión:", err);
-      setError("Usuario o contraseña incorrectos");
     }
   };
 
