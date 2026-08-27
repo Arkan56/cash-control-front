@@ -1,106 +1,205 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { loginUser } from "../../api/server";
 import { useNavigate } from "react-router";
 import { decodeToken } from "../../api/auth";
-
-const ADMIN_ROL = 1;
-const WORKER_ROL = 2;
+import { ROLES } from "../../constants/roles";
 
 function LoginPage() {
   const [userName, setUserName] = useState("");
   const [password, setPassword] = useState("");
+
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userName || !password) return;
+
+    if (!userName.trim() || !password) {
+      setErrorMessage("Ingresa tu usuario y contraseña.");
+      return;
+    }
 
     try {
-      const data = await loginUser(userName, password); // guarda el token en localStorage
+      setLoading(true);
+      setErrorMessage("");
+
+      const data = await loginUser(userName, password);
+
       const payload = decodeToken(data.token);
 
-      if (payload.user_rol_id === ADMIN_ROL) {
+      if (payload.user_rol_id === ROLES.ADMIN) {
         navigate("/admin");
-      } else if (payload.user_rol_id === WORKER_ROL) {
-        navigate("/tiendas");
-      } else {
-        navigate("/");
+        return;
       }
+
+      if (payload.user_rol_id === ROLES.WORKER) {
+        navigate("/tiendas");
+        return;
+      }
+
+      setErrorMessage("Tu usuario no tiene un rol válido.");
     } catch (err) {
       console.error("Error al iniciar sesión:", err);
+
+      setErrorMessage(
+        "No fue posible iniciar sesión. Verifica tu usuario y contraseña.",
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <>
-      <div className="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
-        <div className="sm:mx-auto sm:w-full sm:max-w-sm">
-          <img
-            src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=600"
-            alt="Your Company"
-            className="mx-auto h-10 w-auto"
-          />
-          <h2 className="mt-10 text-center text-2xl/9 font-bold tracking-tight text-gray-900">
-            Ingresa con tu cuenta
-          </h2>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-6 py-12">
+      <div className="w-full max-w-md">
+        {/* Logo */}
+        <div className="flex flex-col items-center mb-8">
+          <div className="flex items-center justify-center w-14 h-14 bg-blue-600 rounded-2xl shadow-sm">
+            <span className="text-2xl font-bold text-white">$</span>
+          </div>
+
+          <h1 className="mt-4 text-2xl font-bold text-gray-900">
+            Control de efectivo
+          </h1>
+
+          <p className="mt-1 text-sm text-gray-500 text-center">
+            Inicia sesión para acceder al sistema.
+          </p>
         </div>
 
-        <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-          <form onSubmit={handleSubmit} method="POST" className="space-y-6">
+        {/* Card */}
+        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-8">
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold text-gray-900">Bienvenido</h2>
+
+            <p className="mt-1 text-sm text-gray-500">
+              Ingresa tus credenciales para continuar.
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Usuario */}
             <div>
               <label
                 htmlFor="userName"
-                className="block text-sm/6 font-medium text-gray-900"
+                className="block text-sm font-medium text-gray-700"
               >
                 Usuario
               </label>
-              <div className="mt-2">
-                <input
-                  id="userName"
-                  type="userName"
-                  name="userName"
-                  value={userName}
-                  onChange={(e) => setUserName(e.target.value)}
-                  required
-                  className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-                />
-              </div>
+
+              <input
+                id="userName"
+                type="text"
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
+                disabled={loading}
+                placeholder="Ingresa tu usuario"
+                autoComplete="username"
+                className="
+                  mt-2
+                  block
+                  w-full
+                  rounded-lg
+                  border
+                  border-gray-300
+                  px-3
+                  py-2.5
+                  text-sm
+                  text-gray-900
+                  placeholder:text-gray-400
+                  focus:border-blue-500
+                  focus:outline-none
+                  focus:ring-2
+                  focus:ring-blue-100
+                  disabled:bg-gray-100
+                  disabled:cursor-not-allowed
+                  transition
+                "
+              />
             </div>
 
+            {/* Contraseña */}
             <div>
-              <div className="flex items-center justify-between">
-                <label
-                  htmlFor="password"
-                  className="block text-sm/6 font-medium text-gray-900"
-                >
-                  Contraseña
-                </label>
-              </div>
-              <div className="mt-2">
-                <input
-                  id="password"
-                  type="password"
-                  name="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-                />
-              </div>
-            </div>
-
-            <div>
-              <button
-                type="submit"
-                className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700"
               >
-                Ingresar
-              </button>
+                Contraseña
+              </label>
+
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
+                placeholder="Ingresa tu contraseña"
+                autoComplete="current-password"
+                className="
+                  mt-2
+                  block
+                  w-full
+                  rounded-lg
+                  border
+                  border-gray-300
+                  px-3
+                  py-2.5
+                  text-sm
+                  text-gray-900
+                  placeholder:text-gray-400
+                  focus:border-blue-500
+                  focus:outline-none
+                  focus:ring-2
+                  focus:ring-blue-100
+                  disabled:bg-gray-100
+                  disabled:cursor-not-allowed
+                  transition
+                "
+              />
             </div>
+
+            {/* Error */}
+            {errorMessage && (
+              <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+                <p className="text-sm text-red-600">{errorMessage}</p>
+              </div>
+            )}
+
+            {/* Botón */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="
+                w-full
+                rounded-lg
+                bg-blue-600
+                px-4
+                py-2.5
+                text-sm
+                font-semibold
+                text-white
+                shadow-sm
+                transition
+                hover:bg-blue-700
+                focus:outline-none
+                focus:ring-2
+                focus:ring-blue-200
+                disabled:bg-blue-400
+                disabled:cursor-not-allowed
+              "
+            >
+              {loading ? "Ingresando..." : "Iniciar sesión"}
+            </button>
           </form>
         </div>
+
+        <p className="mt-6 text-center text-xs text-gray-400">
+          Sistema de gestión y control de efectivo
+        </p>
       </div>
-    </>
+    </div>
   );
 }
 
