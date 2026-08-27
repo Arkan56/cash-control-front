@@ -1,4 +1,4 @@
-import { apiFetch, setToken } from "./cliente";
+import { apiFetch, setToken, clearToken } from "./cliente";
 
 // --- Auth ---
 export const loginUser = async (userName: string, password: string) => {
@@ -9,6 +9,11 @@ export const loginUser = async (userName: string, password: string) => {
   });
   setToken(data.token);
   return data;
+};
+
+export const logoutUser = () => {
+  clearToken();
+  window.location.href = "/";
 };
 
 export const fetchVault = async (vault_id: number) => {
@@ -86,12 +91,11 @@ export const fetchStoreAccess = async (userId: number) =>
 export const fetchVaultAccess = async (userId: number) =>
   apiFetch(`/api/admin/vaultsacces/${userId}`);
 
-export const fetchAdminVaults = async () =>
-  apiFetch("/api/admin/vaults");
+export const fetchAdminVaults = async () => apiFetch("/api/admin/vaults");
 
 export async function syncUserAccess(
   userId: number,
-  data: { store_ids: number[]; vault_ids: number[] }
+  data: { store_ids: number[]; vault_ids: number[] },
 ) {
   return apiFetch(`/api/admin/users/${userId}/access`, {
     method: "PUT",

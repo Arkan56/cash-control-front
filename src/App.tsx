@@ -1,19 +1,23 @@
-import AddMovementPage from "./pages/addmovement";
-import MovementsPage from "./pages/movements";
+import AddMovementPage from "./pages/core/addmovement";
+import MovementsPage from "./pages/core/movements";
 import { BrowserRouter, Routes, Route } from "react-router";
-import VaultsPage from "./pages/vaults";
-import StoresPage from "./pages/stores";
+import VaultsPage from "./pages/core/vaults";
+import StoresPage from "./pages/core/stores";
+
 import AdminDashboardPage from "./pages/admin/dashboard";
 import CreateStorePage from "./pages/admin/createStore";
 import CreateVaultPage from "./pages/admin/createVault";
-import LoginPage from "./pages/auth/login";
-import { RequireRol } from "./components/requireRol";
 import CreateUserPage from "./pages/admin/createUser";
 import UserDetailPage from "./pages/admin/userDetail";
 import UsersPage from "./pages/admin/users";
 
-const ADMIN_ROL = 1;
-const WORKER_ROL = 2;
+import LoginPage from "./pages/auth/login";
+
+import { RequireRol } from "./components/requireRol";
+import { ROLES } from "./constants/roles";
+
+import MainLayout from "./layouts/MainLayout";
+import AdminStoreDetailPage from "./pages/admin/storeDetail";
 
 function App() {
   return (
@@ -22,98 +26,51 @@ function App() {
         <Route path="/" element={<LoginPage />} />
 
         <Route
-          path="/movimientos/:vaultId"
           element={
-            <RequireRol rolesPermitidos={[ADMIN_ROL, WORKER_ROL]}>
-              <MovementsPage />
+            <RequireRol rolesPermitidos={[ROLES.ADMIN, ROLES.WORKER]}>
+              <MainLayout />
             </RequireRol>
           }
-        />
+        >
+          <Route path="movimientos/:vaultId" element={<MovementsPage />} />
+
+          <Route
+            path="añadir-movimiento/:vaultId"
+            element={<AddMovementPage />}
+          />
+
+          <Route path="cajillas/:storeId" element={<VaultsPage />} />
+
+          <Route path="tiendas" element={<StoresPage />} />
+        </Route>
 
         <Route
-          path="/añadir-movimiento/:vaultId"
+          path="admin"
           element={
-            <RequireRol rolesPermitidos={[ADMIN_ROL, WORKER_ROL]}>
-              <AddMovementPage />
+            <RequireRol rolesPermitidos={[ROLES.ADMIN]}>
+              <MainLayout />
             </RequireRol>
           }
-        />
+        >
+          <Route index element={<AdminDashboardPage />} />
 
-        <Route
-          path="/cajillas/:storeId"
-          element={
-            <RequireRol rolesPermitidos={[ADMIN_ROL, WORKER_ROL]}>
-              <VaultsPage />
-            </RequireRol>
-          }
-        />
+          <Route path="crear-local" element={<CreateStorePage />} />
 
-        <Route
-          path="/tiendas"
-          element={
-            <RequireRol rolesPermitidos={[ADMIN_ROL, WORKER_ROL]}>
-              <StoresPage />
-            </RequireRol>
-          }
-        />
+          <Route path="crear-cajilla" element={<CreateVaultPage />} />
 
-        <Route
-          path="/admin"
-          element={
-            <RequireRol rolesPermitidos={[ADMIN_ROL]}>
-              <AdminDashboardPage />
-            </RequireRol>
-          }
-        />
+          <Route path="crear-usuario" element={<CreateUserPage />} />
 
-        <Route
-          path="/admin/crear-local"
-          element={
-            <RequireRol rolesPermitidos={[ADMIN_ROL]}>
-              <CreateStorePage />
-            </RequireRol>
-          }
-        />
+          <Route path="usuarios" element={<UsersPage />} />
 
-        <Route
-          path="/admin/crear-cajilla"
-          element={
-            <RequireRol rolesPermitidos={[ADMIN_ROL]}>
-              <CreateVaultPage />
-            </RequireRol>
-          }
-        />
-
-        <Route
-          path="/admin/crear-usuario"
-          element={
-            <RequireRol rolesPermitidos={[ADMIN_ROL]}>
-              <CreateUserPage />
-            </RequireRol>
-          }
-        />
-
-        <Route
-          path="/admin/usuarios/:userId"
-          element={
-            <RequireRol rolesPermitidos={[ADMIN_ROL]}>
-              <UserDetailPage />
-            </RequireRol>
-          }
-        />
-
-        <Route
-          path="/admin/usuarios"
-          element={
-            <RequireRol rolesPermitidos={[ADMIN_ROL]}>
-              <UsersPage />
-            </RequireRol>
-          }
-        />
+          <Route path="usuarios/:userId" element={<UserDetailPage />} />
+          <Route
+            path="/admin/locales/:storeId"
+            element={<AdminStoreDetailPage />}
+          />
+        </Route>
       </Routes>
     </BrowserRouter>
   );
 }
 
 export default App;
-8;
