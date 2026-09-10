@@ -44,6 +44,11 @@ function UserDetailPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [saveResult, setSaveResult] = useState<{
+    success: boolean;
+    message: string;
+  } | null>(null);
+
   useEffect(() => {
     loadData();
   }, [userId]);
@@ -124,16 +129,24 @@ function UserDetailPage() {
 
     try {
       setSaving(true);
+      setSaveResult(null);
 
       await syncUserAccess(user.ID, {
         store_ids: selectedStores,
         vault_ids: selectedVaults,
       });
 
-      alert("Los accesos fueron guardados correctamente.");
+      setSaveResult({
+        success: true,
+        message: "Los accesos del usuario fueron actualizados correctamente.",
+      });
     } catch (err) {
       console.error(err);
-      alert("Ocurrió un error al guardar los accesos.");
+
+      setSaveResult({
+        success: false,
+        message: "No fue posible guardar los cambios. Inténtalo nuevamente.",
+      });
     } finally {
       setSaving(false);
     }
@@ -176,182 +189,236 @@ function UserDetailPage() {
   }
 
   return (
-    <main className="max-w-4xl mx-auto">
-      {/* Navegación */}
-      <button
-        onClick={() => navigate("/admin/usuarios")}
-        className="mb-6 text-sm font-medium text-gray-500 hover:text-blue-600 transition"
-      >
-        ← Volver a usuarios
-      </button>
+    <>
+      return (
+      <>
+        {saveResult && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
+            <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl p-6">
+              <div className="flex flex-col items-center text-center">
+                <div
+                  className={`flex h-16 w-16 items-center justify-center rounded-full text-3xl ${
+                    saveResult.success ? "bg-green-100" : "bg-red-100"
+                  }`}
+                >
+                  {saveResult.success ? "✓" : "!"}
+                </div>
 
-      {/* Encabezado */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">
-          Información del usuario
-        </h1>
+                <h2 className="mt-4 text-xl font-semibold text-gray-900">
+                  {saveResult.success
+                    ? "Cambios guardados"
+                    : "No se pudieron guardar"}
+                </h2>
 
-        <p className="mt-2 text-gray-500">
-          Consulta la información y administra los accesos del usuario.
-        </p>
-      </div>
+                <p className="mt-2 text-sm text-gray-500">
+                  {saveResult.message}
+                </p>
 
-      {/* Información del usuario */}
-      <section className="bg-white border border-gray-200 rounded-xl shadow-sm p-6 mb-8">
-        <div className="flex items-start gap-4">
-          {/* Icono */}
-          <div className="flex items-center justify-center w-14 h-14 bg-blue-100 rounded-xl text-2xl">
-            👤
+                <button
+                  onClick={() => {
+                    setSaveResult(null);
+
+                    if (saveResult.success) {
+                      navigate("/admin/usuarios");
+                    }
+                  }}
+                  className={`mt-6 w-full rounded-lg px-5 py-2.5 text-sm font-medium text-white transition ${
+                    saveResult.success
+                      ? "bg-blue-600 hover:bg-blue-700"
+                      : "bg-red-600 hover:bg-red-700"
+                  }`}
+                >
+                  {saveResult.success ? "Continuar" : "Cerrar"}
+                </button>
+              </div>
+            </div>
           </div>
+        )}
 
-          {/* Información principal */}
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">{user.Name}</h2>
+        <main className="max-w-4xl mx-auto">{/* resto de tu página */}</main>
+      </>
+      );
+      <main className="max-w-4xl mx-auto">
+        {/* Navegación */}
+        <button
+          onClick={() => navigate("/admin/usuarios")}
+          className="mb-6 text-sm font-medium text-gray-500 hover:text-blue-600 transition"
+        >
+          ← Volver a usuarios
+        </button>
 
-            <p className="mt-1 text-sm text-gray-500">
-              {user.IdRol === 1 ? "Administrador" : "Trabajador"}
-            </p>
-          </div>
+        {/* Encabezado */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">
+            Información del usuario
+          </h1>
+
+          <p className="mt-2 text-gray-500">
+            Consulta la información y administra los accesos del usuario.
+          </p>
         </div>
 
-        <div className="mt-6 pt-6 border-t border-gray-100">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
-                Usuario
-              </p>
-
-              <p className="mt-1 font-medium text-gray-800">{user.UserName}</p>
+        {/* Información del usuario */}
+        <section className="bg-white border border-gray-200 rounded-xl shadow-sm p-6 mb-8">
+          <div className="flex items-start gap-4">
+            {/* Icono */}
+            <div className="flex items-center justify-center w-14 h-14 bg-blue-100 rounded-xl text-2xl">
+              👤
             </div>
 
+            {/* Información principal */}
             <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
-                Rol
-              </p>
+              <h2 className="text-xl font-semibold text-gray-900">
+                {user.Name}
+              </h2>
 
-              <p className="mt-1 font-medium text-gray-800">
+              <p className="mt-1 text-sm text-gray-500">
                 {user.IdRol === 1 ? "Administrador" : "Trabajador"}
               </p>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* Accesos */}
-      <section className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold text-gray-900">
-            Accesos del usuario
-          </h2>
+          <div className="mt-6 pt-6 border-t border-gray-100">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
+                  Usuario
+                </p>
 
-          <p className="mt-1 text-sm text-gray-500">
-            Selecciona los locales y las cajillas a las que este usuario puede
-            acceder.
-          </p>
-        </div>
-
-        <div className="space-y-4">
-          {stores.map((store) => {
-            const storeVaults = vaults.filter(
-              (vault) => vault.store_id === store.id,
-            );
-
-            const isStoreSelected = selectedStores.includes(store.id);
-
-            return (
-              <div
-                key={store.id}
-                className={`border rounded-xl transition ${
-                  isStoreSelected
-                    ? "border-blue-200 bg-blue-50/40"
-                    : "border-gray-200"
-                }`}
-              >
-                {/* Local */}
-                <label className="flex items-center justify-between p-5 cursor-pointer">
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center justify-center w-10 h-10 bg-blue-100 rounded-lg">
-                      🏪
-                    </div>
-
-                    <div>
-                      <h3 className="font-semibold text-gray-800">
-                        {store.name}
-                      </h3>
-
-                      <p className="text-sm text-gray-500">
-                        {storeVaults.length} cajilla
-                        {storeVaults.length !== 1 ? "s" : ""} disponible
-                        {storeVaults.length !== 1 ? "s" : ""}
-                      </p>
-                    </div>
-                  </div>
-
-                  <input
-                    type="checkbox"
-                    checked={isStoreSelected}
-                    onChange={() => toggleStore(store.id)}
-                    className="w-5 h-5 accent-blue-600"
-                  />
-                </label>
-
-                {/* Cajillas */}
-                {storeVaults.length > 0 && (
-                  <div className="border-t border-gray-100 px-5 py-4">
-                    <p className="mb-3 text-sm font-medium text-gray-600">
-                      Cajillas disponibles
-                    </p>
-
-                    <div className="space-y-2">
-                      {storeVaults.map((vault) => (
-                        <label
-                          key={vault.id}
-                          className="flex items-center justify-between rounded-lg px-3 py-3 hover:bg-gray-50 cursor-pointer transition"
-                        >
-                          <div className="flex items-center gap-3">
-                            <span className="text-lg">🔐</span>
-
-                            <span className="text-sm font-medium text-gray-700">
-                              {vault.name}
-                            </span>
-                          </div>
-
-                          <input
-                            type="checkbox"
-                            checked={selectedVaults.includes(vault.id)}
-                            onChange={() => toggleVault(vault.id, store.id)}
-                            className="w-4 h-4 accent-blue-600"
-                          />
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                <p className="mt-1 font-medium text-gray-800">
+                  {user.UserName}
+                </p>
               </div>
-            );
-          })}
-        </div>
 
-        {/* Acciones */}
-        <div className="mt-8 pt-6 border-t border-gray-100 flex flex-col-reverse sm:flex-row justify-end gap-3">
-          <button
-            onClick={() => navigate("/admin/usuarios")}
-            disabled={saving}
-            className="px-5 py-2.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50"
-          >
-            Cancelar
-          </button>
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
+                  Rol
+                </p>
 
-          <button
-            onClick={save}
-            disabled={saving}
-            className="px-5 py-2.5 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition disabled:bg-blue-300"
-          >
-            {saving ? "Guardando cambios..." : "Guardar cambios"}
-          </button>
-        </div>
-      </section>
-    </main>
+                <p className="mt-1 font-medium text-gray-800">
+                  {user.IdRol === 1 ? "Administrador" : "Trabajador"}
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Accesos */}
+        <section className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold text-gray-900">
+              Accesos del usuario
+            </h2>
+
+            <p className="mt-1 text-sm text-gray-500">
+              Selecciona los locales y las cajillas a las que este usuario puede
+              acceder.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            {stores.map((store) => {
+              const storeVaults = vaults.filter(
+                (vault) => vault.store_id === store.id,
+              );
+
+              const isStoreSelected = selectedStores.includes(store.id);
+
+              return (
+                <div
+                  key={store.id}
+                  className={`border rounded-xl transition ${
+                    isStoreSelected
+                      ? "border-blue-200 bg-blue-50/40"
+                      : "border-gray-200"
+                  }`}
+                >
+                  {/* Local */}
+                  <label className="flex items-center justify-between p-5 cursor-pointer">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-center w-10 h-10 bg-blue-100 rounded-lg">
+                        🏪
+                      </div>
+
+                      <div>
+                        <h3 className="font-semibold text-gray-800">
+                          {store.name}
+                        </h3>
+
+                        <p className="text-sm text-gray-500">
+                          {storeVaults.length} cajilla
+                          {storeVaults.length !== 1 ? "s" : ""} disponible
+                          {storeVaults.length !== 1 ? "s" : ""}
+                        </p>
+                      </div>
+                    </div>
+
+                    <input
+                      type="checkbox"
+                      checked={isStoreSelected}
+                      onChange={() => toggleStore(store.id)}
+                      className="w-5 h-5 accent-blue-600"
+                    />
+                  </label>
+
+                  {/* Cajillas */}
+                  {storeVaults.length > 0 && (
+                    <div className="border-t border-gray-100 px-5 py-4">
+                      <p className="mb-3 text-sm font-medium text-gray-600">
+                        Cajillas disponibles
+                      </p>
+
+                      <div className="space-y-2">
+                        {storeVaults.map((vault) => (
+                          <label
+                            key={vault.id}
+                            className="flex items-center justify-between rounded-lg px-3 py-3 hover:bg-gray-50 cursor-pointer transition"
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className="text-lg">🔐</span>
+
+                              <span className="text-sm font-medium text-gray-700">
+                                {vault.name}
+                              </span>
+                            </div>
+
+                            <input
+                              type="checkbox"
+                              checked={selectedVaults.includes(vault.id)}
+                              onChange={() => toggleVault(vault.id, store.id)}
+                              className="w-4 h-4 accent-blue-600"
+                            />
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Acciones */}
+          <div className="mt-8 pt-6 border-t border-gray-100 flex flex-col-reverse sm:flex-row justify-end gap-3">
+            <button
+              onClick={() => navigate("/admin/usuarios")}
+              disabled={saving}
+              className="px-5 py-2.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50"
+            >
+              Cancelar
+            </button>
+
+            <button
+              onClick={save}
+              disabled={saving}
+              className="px-5 py-2.5 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition disabled:bg-blue-300"
+            >
+              {saving ? "Guardando cambios..." : "Guardar cambios"}
+            </button>
+          </div>
+        </section>
+      </main>
+    </>
   );
 }
 
