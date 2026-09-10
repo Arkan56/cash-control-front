@@ -62,7 +62,7 @@ export default function Header() {
             {rolId === ROLES.ADMIN && (
               <>
                 <NavLink to="/admin" end className={navLinkClass}>
-                  Dashboard
+                  Panel principal
                 </NavLink>
 
                 <NavLink to="/admin/usuarios" className={navLinkClass}>
