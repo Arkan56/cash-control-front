@@ -45,6 +45,10 @@ export const fetchStores = async () => {
   return apiFetch("/api/core/stores");
 };
 
+export const fetchAmountGategory = async () => {
+  return apiFetch("/api/core/amountcat");
+};
+
 // --- Admin ---
 export const createStore = async (payload: { name: string }) => {
   return apiFetch("/api/admin/stores", {
@@ -102,3 +106,12 @@ export async function syncUserAccess(
     body: JSON.stringify(data),
   });
 }
+
+export const createAmountCategory = async (payload: {
+  description: string;
+}) => {
+  return apiFetch("/api/admin/amountcat", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+};

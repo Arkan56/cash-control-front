@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
-import { createMovement } from "../../api/server";
+import { createMovement, fetchAmountGategory } from "../../api/server";
 
 function AddMovementPage() {
   const navigate = useNavigate();
@@ -13,6 +13,14 @@ function AddMovementPage() {
   const [detail, setDetail] = useState("");
   const [amountDisplay, setAmountDisplay] = useState("");
   const [amountRaw, setAmountRaw] = useState<number | null>(null);
+  interface AmountCategory {
+    id: number;
+    description: string;
+  }
+
+  const [amountCategories, setAmountCategories] = useState<AmountCategory[]>(
+    [],
+  );
   const [categoryId, setCategoryId] = useState("");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -24,6 +32,20 @@ function AddMovementPage() {
     success: boolean;
     message: string;
   } | null>(null);
+
+  const fetchData = async () => {
+    try {
+      const data = await fetchAmountGategory();
+      setAmountCategories(data);
+    } catch (err) {
+      console.error("Error fetching amount categories: ", err);
+      setError("No fue posible cargar las categorias para el monto.");
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   const formatThousands = (value: string) =>
     value
@@ -371,12 +393,11 @@ function AddMovementPage() {
                 Selecciona una categoría
               </option>
 
-              <option value="1">Salario</option>
-              <option value="2">Arriendo</option>
-              <option value="3">Servicios</option>
-              <option value="4">Alimentación</option>
-              <option value="5">Transporte</option>
-              <option value="6">Otro</option>
+              {amountCategories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.description}
+                </option>
+              ))}
             </select>
           </div>
 

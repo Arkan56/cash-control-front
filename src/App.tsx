@@ -18,6 +18,7 @@ import { ROLES } from "./constants/roles";
 
 import MainLayout from "./layouts/MainLayout";
 import AdminStoreDetailPage from "./pages/admin/storeDetail";
+import AmountCategoryPage from "./pages/admin/AmountCategoryPage";
 
 function App() {
   return (
@@ -66,6 +67,10 @@ function App() {
           <Route
             path="/admin/locales/:storeId"
             element={<AdminStoreDetailPage />}
+          />
+          <Route
+            path="crear-categoria-para-monto"
+            element={<AmountCategoryPage />}
           />
         </Route>
       </Routes>
