@@ -1,3 +1,4 @@
+import type { StoreDetail } from "../types/stores";
 import { apiFetch, setToken, clearToken } from "./cliente";
 
 // --- Auth ---
@@ -112,6 +113,22 @@ export const createAmountCategory = async (payload: {
 }) => {
   return apiFetch("/api/admin/amountcat", {
     method: "POST",
+    body: JSON.stringify(payload),
+  });
+};
+
+export const fetchStoreDetail = async (
+  storeId: number,
+): Promise<StoreDetail> => {
+  return apiFetch(`/api/admin/stores/${storeId}`);
+};
+
+export const updateStore = async (
+  storeId: number,
+  payload: { name: string },
+) => {
+  return apiFetch(`/api/admin/stores/${storeId}`, {
+    method: "PATCH",
     body: JSON.stringify(payload),
   });
 };

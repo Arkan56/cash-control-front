@@ -1,25 +1,35 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 
-import { fetchVault, fetchVaults } from "../../api/server";
+import { fetchStoreDetail, updateStore } from "../../api/server";
 
 import Loading from "../../components/loading";
-import type { Vault } from "../../types/vault";
+import type { StoreDetail } from "../../types/stores";
 
 function AdminStoreDetailPage() {
   const { storeId } = useParams();
   const navigate = useNavigate();
 
-  const [vaults, setVaults] = useState<Vault[]>([]);
+  const [store, setStore] = useState<StoreDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Store name editing
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedStoreName, setEditedStoreName] = useState("");
+  const [isSavingName, setIsSavingName] = useState(false);
+  const [nameError, setNameError] = useState<string | null>(null);
 
   useEffect(() => {
     loadStoreData();
   }, [storeId]);
 
   const loadStoreData = async () => {
-    if (!storeId) {
+    if (
+      !storeId ||
+      !Number.isInteger(Number(storeId)) ||
+      Number(storeId) <= 0
+    ) {
       navigate("/admin");
       return;
     }
@@ -28,21 +38,12 @@ function AdminStoreDetailPage() {
       setIsLoading(true);
       setError(null);
 
-      const id = Number(storeId);
+      const storeData = await fetchStoreDetail(Number(storeId));
 
-      // Obtenemos las cajillas del local
-      const vaultsData = await fetchVaults(id);
-
-      // Obtenemos la información completa de cada cajilla
-      const vaultsWithBalance = await Promise.all(
-        vaultsData.map((vault: Vault) => fetchVault(vault.id)),
-      );
-
-      setVaults(vaultsWithBalance);
+      setStore(storeData);
     } catch (err) {
-      console.error("Error cargando información del local:", err);
-
-      setError("No fue posible cargar la información del local.");
+      console.error("Error loading store details:", err);
+      setError("Could not load store information.");
     } finally {
       setIsLoading(false);
     }
@@ -56,37 +57,81 @@ function AdminStoreDetailPage() {
     }).format(value);
   };
 
-  const totalBalance = vaults.reduce(
-    (total, vault) => total + vault.balance,
-    0,
-  );
+  // Start editing
+  const handleEditName = () => {
+    if (!store) return;
 
-  const storeName = vaults.length > 0 ? vaults[0].store_name : "Local";
+    setEditedStoreName(store.name);
+    setNameError(null);
+    setIsEditingName(true);
+  };
+
+  // Cancel editing
+  const handleCancelEdit = () => {
+    setEditedStoreName("");
+    setNameError(null);
+    setIsEditingName(false);
+  };
+
+  // Save new store name
+  const handleSaveName = async () => {
+    if (!store) return;
+
+    const newName = editedStoreName.trim();
+
+    if (!newName) {
+      setNameError("The store name cannot be empty.");
+      return;
+    }
+
+    if (newName === store.name) {
+      setIsEditingName(false);
+      return;
+    }
+
+    try {
+      setIsSavingName(true);
+      setNameError(null);
+
+      await updateStore(store.id, { name: newName });
+
+      setStore((prev) => (prev ? { ...prev, name: newName } : prev));
+
+      setIsEditingName(false);
+    } catch (err) {
+      console.error("Error updating store name:", err);
+      setNameError("Could not update the store name.");
+    } finally {
+      setIsSavingName(false);
+    }
+  };
 
   if (isLoading) {
     return <Loading />;
   }
 
-  if (error) {
+  if (error || !store) {
     return (
       <div className="max-w-6xl mx-auto">
         <button
           onClick={() => navigate("/admin")}
           className="mb-6 text-sm font-medium text-gray-500 hover:text-blue-600"
         >
-          ← Volver al dashboard
+          ← Back to dashboard
         </button>
 
         <div className="border border-red-200 bg-red-50 rounded-xl p-6">
-          <h2 className="font-semibold text-red-700">Ocurrió un problema</h2>
+          <h2 className="font-semibold text-red-700">Something went wrong</h2>
 
-          <p className="mt-2 text-sm text-red-600">{error}</p>
+          <p className="mt-2 text-sm text-red-600">
+            {error || "Store not found."}
+          </p>
 
           <button
             onClick={loadStoreData}
             className="mt-5 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition"
           >
-            Intentar nuevamente
+            Try again
           </button>
         </div>
       </div>
@@ -95,26 +140,83 @@ function AdminStoreDetailPage() {
 
   return (
     <main className="max-w-6xl mx-auto">
-      {/* Volver */}
+      {/* Back button */}
       <button
         onClick={() => navigate("/admin")}
         className="mb-6 text-sm font-medium text-gray-500 hover:text-blue-600 transition"
       >
-        ← Volver al dashboard
+        ← Back to dashboard
       </button>
 
-      {/* Encabezado */}
+      {/* Store header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">{storeName}</h1>
+        {isEditingName ? (
+          <div className="max-w-lg">
+            <label
+              htmlFor="store-name"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Store name
+            </label>
+
+            <div className="flex flex-col sm:flex-row gap-2">
+              <input
+                id="store-name"
+                type="text"
+                value={editedStoreName}
+                onChange={(e) => setEditedStoreName(e.target.value)}
+                maxLength={100}
+                disabled={isSavingName}
+                autoFocus
+                className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+
+              <div className="flex gap-2">
+                <button
+                  onClick={handleSaveName}
+                  disabled={isSavingName}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg disabled:opacity-50"
+                >
+                  {isSavingName ? "Saving..." : "Save"}
+                </button>
+
+                <button
+                  onClick={handleCancelEdit}
+                  disabled={isSavingName}
+                  className="px-4 py-2 border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-lg disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+
+            {nameError && (
+              <p className="mt-2 text-sm text-red-600">{nameError}</p>
+            )}
+          </div>
+        ) : (
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-bold text-gray-900">{store.name}</h1>
+
+            <button
+              onClick={handleEditName}
+              title="Edit store name"
+              aria-label="Edit store name"
+              className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
+            >
+              ✏️
+            </button>
+          </div>
+        )}
 
         <p className="mt-2 text-gray-500">
-          Consulta el resumen financiero y administra las cajillas del local.
+          View the financial summary and manage the store's vaults.
         </p>
       </div>
 
-      {/* Resumen */}
+      {/* Summary */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        {/* Balance */}
+        {/* Total balance */}
         <div className="md:col-span-2 bg-white border border-gray-200 rounded-xl shadow-sm p-6">
           <div className="flex items-center gap-3">
             <div className="flex items-center justify-center w-12 h-12 bg-green-50 rounded-xl text-2xl">
@@ -122,47 +224,47 @@ function AdminStoreDetailPage() {
             </div>
 
             <div>
-              <p className="text-sm text-gray-500">Balance total</p>
+              <p className="text-sm text-gray-500">Total balance</p>
 
               <h2 className="text-3xl font-bold text-gray-900 mt-1">
-                {formatCurrency(totalBalance)}
+                {formatCurrency(store.balance)}
               </h2>
             </div>
           </div>
 
           <p className="mt-4 text-sm text-gray-500">
-            Saldo acumulado entre todas las cajillas del local.
+            Total accumulated balance across all store vaults.
           </p>
         </div>
 
-        {/* Número de cajillas */}
+        {/* Vault count */}
         <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
           <div className="flex items-center justify-center w-12 h-12 bg-blue-50 rounded-xl text-2xl">
             🔐
           </div>
 
-          <p className="mt-4 text-sm text-gray-500">Cajillas</p>
+          <p className="mt-4 text-sm text-gray-500">Vaults</p>
 
           <h2 className="text-3xl font-bold text-gray-900 mt-1">
-            {vaults.length}
+            {store.vaults.length}
           </h2>
 
           <p className="mt-2 text-sm text-gray-500">
-            Cajillas registradas en este local.
+            Vaults registered in this store.
           </p>
         </div>
       </section>
 
-      {/* Cajillas */}
+      {/* Vaults */}
       <section className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
             <h2 className="text-xl font-semibold text-gray-900">
-              Cajillas del local
+              Store vaults
             </h2>
 
             <p className="mt-1 text-sm text-gray-500">
-              Consulta el saldo y los movimientos de cada cajilla.
+              View the balance and movements of each vault.
             </p>
           </div>
 
@@ -170,33 +272,33 @@ function AdminStoreDetailPage() {
             onClick={() => navigate("/admin/crear-cajilla")}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition"
           >
-            + Crear cajilla
+            + Create vault
           </button>
         </div>
 
-        {/* Lista */}
-        {vaults.length === 0 ? (
+        {/* Vault list */}
+        {store.vaults.length === 0 ? (
           <div className="py-12 text-center">
             <div className="text-4xl mb-4">🔐</div>
 
             <h3 className="text-lg font-semibold text-gray-800">
-              No hay cajillas registradas
+              No vaults registered
             </h3>
 
             <p className="mt-2 text-sm text-gray-500">
-              Este local todavía no tiene cajillas registradas.
+              This store doesn't have any registered vaults yet.
             </p>
 
             <button
               onClick={() => navigate("/admin/crear-cajilla")}
               className="mt-5 px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
             >
-              Crear primera cajilla
+              Create first vault
             </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {vaults.map((vault) => (
+            {store.vaults.map((vault) => (
               <button
                 key={vault.id}
                 onClick={() => navigate(`/movimientos/${vault.id}`)}
@@ -213,7 +315,9 @@ function AdminStoreDetailPage() {
                         {vault.name}
                       </h3>
 
-                      <p className="mt-1 text-sm text-gray-500">Saldo actual</p>
+                      <p className="mt-1 text-sm text-gray-500">
+                        Current balance
+                      </p>
                     </div>
                   </div>
 
@@ -225,7 +329,7 @@ function AdminStoreDetailPage() {
                 </p>
 
                 <p className="mt-4 text-sm font-medium text-blue-600">
-                  Ver movimientos →
+                  View movements →
                 </p>
               </button>
             ))}

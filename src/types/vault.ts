@@ -4,3 +4,9 @@ export interface Vault {
   store_name: string;
   balance: number;
 }
+export interface StoreVault {
+  id: number;
+  store_id: number;
+  name: string;
+  balance: number;
+}
