@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { fetchMovements, fetchVault } from "../../api/server";
 import { useNavigate, useParams } from "react-router";
 import type { Vault } from "../../types/vault";
@@ -37,6 +37,23 @@ function MovementsPage() {
   const [moveList, setMoveList] = useState<Movements[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const initialDateRange = getCurrentMonthRange();
+
+  const [startDate, setStartDate] = useState(initialDateRange.startDate);
+  const [endDate, setEndDate] = useState(initialDateRange.endDate);
+
+  const [appliedStartDate, setAppliedStartDate] = useState(
+    initialDateRange.startDate,
+  );
+  const [appliedEndDate, setAppliedEndDate] = useState(
+    initialDateRange.endDate,
+  );
+
+  type MovementType = "all" | "income" | "expense";
+
+  const [movementType, setMovementType] = useState<MovementType>("all");
+  const [appliedMovementType, setAppliedMovementType] =
+    useState<MovementType>("all");
 
   const { vaultId } = useParams();
   const navigate = useNavigate();
@@ -45,12 +62,33 @@ function MovementsPage() {
     navigate(`/añadir-movimiento/${vaultId}`);
   };
 
-  const loadData = async () => {
+  const filteredMovements = moveList.filter((movement) => {
+    if (appliedMovementType === "income") {
+      return movement.amount > 0;
+    }
+
+    if (appliedMovementType === "expense") {
+      return movement.amount < 0;
+    }
+
+    return true;
+  });
+
+  const loadData = useCallback(async () => {
     const id = Number(vaultId);
 
     if (!id) {
       setError("La cajilla seleccionada no es válida.");
       setLoading(false);
+      return;
+    }
+
+    if (
+      !appliedStartDate ||
+      !appliedEndDate ||
+      appliedEndDate < appliedStartDate
+    ) {
+      setError("El rango de fechas seleccionado no es válido.");
       return;
     }
 
@@ -60,7 +98,7 @@ function MovementsPage() {
 
       const [vaultData, movements] = await Promise.all([
         fetchVault(id),
-        fetchMovements(id),
+        fetchMovements(id, appliedStartDate, appliedEndDate),
       ]);
 
       setVault(vaultData);
@@ -78,11 +116,21 @@ function MovementsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [vaultId, appliedStartDate, appliedEndDate]);
 
   useEffect(() => {
     loadData();
-  }, [vaultId]);
+  }, [loadData]);
+
+  const handleFilter = () => {
+    if (!startDate || !endDate || endDate < startDate) {
+      return;
+    }
+
+    setAppliedStartDate(startDate);
+    setAppliedEndDate(endDate);
+    setAppliedMovementType(movementType);
+  };
 
   const handleVaultsBack = () => {
     navigate(-1);
@@ -165,27 +213,109 @@ function MovementsPage() {
               <p className="mt-1 text-sm text-gray-500">
                 Historial de movimientos registrados en esta cajilla.
               </p>
+
+              {/* Filters */}
+              <div className="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-xl">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-800">
+                      Filtrar movimientos
+                    </h3>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Selecciona los criterios de búsqueda.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                  {/* Fecha inicial */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                      Fecha inicial
+                    </label>
+
+                    <input
+                      type="date"
+                      value={startDate}
+                      max={endDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    />
+                  </div>
+
+                  {/* Fecha final */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                      Fecha final
+                    </label>
+
+                    <input
+                      type="date"
+                      value={endDate}
+                      min={startDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    />
+                  </div>
+
+                  {/* Tipo de movimiento */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                      Tipo de movimiento
+                    </label>
+
+                    <select
+                      value={movementType}
+                      onChange={(e) =>
+                        setMovementType(e.target.value as MovementType)
+                      }
+                      className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    >
+                      <option value="all">Todos</option>
+                      <option value="income">Ingresos</option>
+                      <option value="expense">Egresos</option>
+                    </select>
+                  </div>
+
+                  {/* Botón filtrar */}
+                  <button
+                    onClick={handleFilter}
+                    disabled={
+                      loading ||
+                      !startDate ||
+                      !endDate ||
+                      endDate < startDate ||
+                      (startDate === appliedStartDate &&
+                        endDate === appliedEndDate &&
+                        movementType === appliedMovementType)
+                    }
+                    className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-5 py-2.5 rounded-lg text-sm font-medium transition"
+                  >
+                    Filtrar
+                  </button>
+                </div>
+              </div>
             </div>
 
             {/* Sin movimientos */}
-            {moveList.length === 0 && (
+            {filteredMovements.length === 0 && (
               <div className="py-16 text-center">
                 <div className="text-4xl mb-3">📋</div>
 
                 <h3 className="font-semibold text-gray-800">
-                  No hay movimientos registrados
+                  No hay movimientos para este filtro
                 </h3>
 
                 <p className="mt-2 text-sm text-gray-500">
-                  Los movimientos realizados aparecerán aquí.
+                  Intenta seleccionar otro tipo de movimiento.
                 </p>
               </div>
             )}
 
             {/* Lista */}
-            {moveList.length > 0 && (
+            {filteredMovements.length > 0 && (
               <div className="divide-y divide-gray-100">
-                {moveList.map((movement) => (
+                {filteredMovements.map((movement) => (
                   <div
                     key={movement.id}
                     className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-5 hover:bg-gray-50 transition"
@@ -219,5 +349,26 @@ function MovementsPage() {
     </div>
   );
 }
+
+const getCurrentMonthRange = () => {
+  const today = new Date();
+
+  const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+
+  const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+  const formatDate = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+  };
+
+  return {
+    startDate: formatDate(firstDay),
+    endDate: formatDate(lastDay),
+  };
+};
 
 export default MovementsPage;

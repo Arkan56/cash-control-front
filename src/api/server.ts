@@ -22,8 +22,17 @@ export const fetchVault = async (vault_id: number) => {
 };
 
 // --- Core ---
-export const fetchMovements = async (vault_id: number) => {
-  return apiFetch(`/api/core/movements/vault/${vault_id}`);
+export const fetchMovements = async (
+  vault_id: number,
+  start_date: string,
+  end_date: string,
+) => {
+  const params = new URLSearchParams({
+    start_date,
+    end_date,
+  });
+
+  return apiFetch(`/api/core/movements/vault/${vault_id}?${params.toString()}`);
 };
 
 export const createMovement = async (payload: {
