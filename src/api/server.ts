@@ -1,4 +1,5 @@
 import type { StoreDetail } from "../types/stores";
+import type { User } from "../types/user";
 import { apiFetch, setToken, clearToken } from "./cliente";
 
 // --- Auth ---
@@ -81,9 +82,25 @@ export const createUser = async (payload: {
   user_name: string;
   name: string;
   password: string;
+  rol_id: number;
 }) => {
   return apiFetch("/api/admin/users", {
     method: "POST",
+    body: JSON.stringify(payload),
+  });
+};
+
+export const updateUser = async (
+  userId: number,
+  payload: {
+    user_name?: string;
+    name?: string;
+    password?: string;
+    rol_id?: number;
+  },
+): Promise<User> => {
+  return apiFetch(`/api/admin/users/${userId}`, {
+    method: "PATCH",
     body: JSON.stringify(payload),
   });
 };

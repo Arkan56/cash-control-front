@@ -13,6 +13,8 @@ import {
 import type { User } from "../../types/user";
 import type { Stores } from "../../types/stores";
 import Loading from "../../components/loading";
+import EditUserModal from "../../components/editUserModal";
+import { getRoleName } from "../../constants/roles";
 
 interface Vault {
   id: number;
@@ -43,6 +45,8 @@ function UserDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [editing, setEditing] = useState(false);
 
   const [saveResult, setSaveResult] = useState<{
     success: boolean;
@@ -190,7 +194,6 @@ function UserDetailPage() {
 
   return (
     <>
-      return (
       <>
         {saveResult && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
@@ -235,9 +238,19 @@ function UserDetailPage() {
           </div>
         )}
 
+        {editing && (
+          <EditUserModal
+            user={user}
+            onClose={() => setEditing(false)}
+            onSaved={(updated) => {
+              setUser(updated);
+              setEditing(false);
+            }}
+          />
+        )}
+
         <main className="max-w-4xl mx-auto">{/* resto de tu página */}</main>
       </>
-      );
       <main className="max-w-4xl mx-auto">
         {/* Navegación */}
         <button
@@ -260,22 +273,30 @@ function UserDetailPage() {
 
         {/* Información del usuario */}
         <section className="bg-white border border-gray-200 rounded-xl shadow-sm p-6 mb-8">
-          <div className="flex items-start gap-4">
-            {/* Icono */}
-            <div className="flex items-center justify-center w-14 h-14 bg-blue-100 rounded-xl text-2xl">
-              👤
-            </div>
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start gap-4">
+              {/* Icono */}
+              <div className="flex items-center justify-center w-14 h-14 bg-blue-100 rounded-xl text-2xl">
+                👤
+              </div>
 
-            {/* Información principal */}
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">
-                {user.Name}
-              </h2>
+              {/* Información principal */}
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900">
+                  {user.Name}
+                </h2>
 
-              <p className="mt-1 text-sm text-gray-500">
-                {user.IdRol === 1 ? "Administrador" : "Trabajador"}
-              </p>
+                <p className="mt-1 text-sm text-gray-500">
+                  {getRoleName(user.IdRol)}
+                </p>
+              </div>
             </div>
+            <button
+              onClick={() => setEditing(true)}
+              className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+            >
+              Editar
+            </button>
           </div>
 
           <div className="mt-6 pt-6 border-t border-gray-100">
@@ -296,7 +317,7 @@ function UserDetailPage() {
                 </p>
 
                 <p className="mt-1 font-medium text-gray-800">
-                  {user.IdRol === 1 ? "Administrador" : "Trabajador"}
+                  {getRoleName(user.IdRol)}
                 </p>
               </div>
             </div>

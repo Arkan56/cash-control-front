@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { createUser } from "../../api/server";
 import { useNavigate } from "react-router";
+import { getRoleName, ROLES } from "../../constants/roles";
 
 function CreateUserPage() {
   const navigate = useNavigate();
@@ -8,6 +9,7 @@ function CreateUserPage() {
   const [userName, setUserName] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
+  const [roleId, setRoleId] = useState<number>(ROLES.WORKER);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,6 +48,7 @@ function CreateUserPage() {
         user_name: trimmedUserName,
         name: trimmedName,
         password,
+        rol_id: roleId,
       });
 
       navigate("/admin/usuarios");
@@ -155,6 +158,27 @@ function CreateUserPage() {
           <p className="mt-2 text-sm text-gray-500">
             La contraseña permitirá al usuario acceder al sistema.
           </p>
+        </div>
+
+        {/* Rol */}
+        <div className="mb-5">
+          <label
+            htmlFor="role"
+            className="block mb-2 text-sm font-semibold text-gray-800"
+          >
+            Rol
+          </label>
+
+          <select
+            id="role"
+            value={roleId}
+            onChange={(e) => setRoleId(Number(e.target.value))}
+            disabled={isSubmitting}
+            className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+          >
+            <option value={ROLES.WORKER}>{getRoleName(ROLES.WORKER)}</option>
+            <option value={ROLES.ADMIN}>{getRoleName(ROLES.ADMIN)}</option>
+          </select>
         </div>
 
         {/* Botones */}
