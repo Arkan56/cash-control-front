@@ -18,7 +18,7 @@ import { ROLES } from "./constants/roles";
 
 import MainLayout from "./layouts/MainLayout";
 import AdminStoreDetailPage from "./pages/admin/storeDetail";
-import AmountCategoryPage from "./pages/admin/AmountCategoryPage";
+import AmountCategoryPage from "./pages/admin/amountCategoryPage";
 
 function App() {
   return (
