@@ -1,3 +1,5 @@
+import type { StoreDetail } from "../types/stores";
+import type { User } from "../types/user";
 import { apiFetch, setToken, clearToken } from "./cliente";
 
 // --- Auth ---
@@ -21,8 +23,17 @@ export const fetchVault = async (vault_id: number) => {
 };
 
 // --- Core ---
-export const fetchMovements = async (vault_id: number) => {
-  return apiFetch(`/api/core/movements/vault/${vault_id}`);
+export const fetchMovements = async (
+  vault_id: number,
+  start_date: string,
+  end_date: string,
+) => {
+  const params = new URLSearchParams({
+    start_date,
+    end_date,
+  });
+
+  return apiFetch(`/api/core/movements/vault/${vault_id}?${params.toString()}`);
 };
 
 export const createMovement = async (payload: {
@@ -43,6 +54,10 @@ export const fetchVaults = async (store_id: number) => {
 
 export const fetchStores = async () => {
   return apiFetch("/api/core/stores");
+};
+
+export const fetchAmountGategory = async () => {
+  return apiFetch("/api/core/amountcat");
 };
 
 // --- Admin ---
@@ -67,9 +82,25 @@ export const createUser = async (payload: {
   user_name: string;
   name: string;
   password: string;
+  rol_id: number;
 }) => {
   return apiFetch("/api/admin/users", {
     method: "POST",
+    body: JSON.stringify(payload),
+  });
+};
+
+export const updateUser = async (
+  userId: number,
+  payload: {
+    user_name?: string;
+    name?: string;
+    password?: string;
+    rol_id?: number;
+  },
+): Promise<User> => {
+  return apiFetch(`/api/admin/users/${userId}`, {
+    method: "PATCH",
     body: JSON.stringify(payload),
   });
 };
@@ -102,3 +133,28 @@ export async function syncUserAccess(
     body: JSON.stringify(data),
   });
 }
+
+export const createAmountCategory = async (payload: {
+  description: string;
+}) => {
+  return apiFetch("/api/admin/amountcat", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+};
+
+export const fetchStoreDetail = async (
+  storeId: number,
+): Promise<StoreDetail> => {
+  return apiFetch(`/api/admin/stores/${storeId}`);
+};
+
+export const updateStore = async (
+  storeId: number,
+  payload: { name: string },
+) => {
+  return apiFetch(`/api/admin/stores/${storeId}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+};
